@@ -1,0 +1,6 @@
+spring:
+  cloud:
+    loadbalancer:
+      configurations: zone-preference
+      cache:
+        enabled: true

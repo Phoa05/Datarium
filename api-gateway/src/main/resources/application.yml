@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: assets-service
+          uri: lb://assets-service
+          predicates:
+            - Path=/api/assets/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: assetsFallback
+                fallbackUri: forward:/fallback/assets
+            - StripPrefix=1
+
+        - id: user-profile-service
+          uri: lb://user-profile-service
+          predicates:
+            - Path=/api/profiles/**
+          filters:
+            - StripPrefix=1
+
+        - id: recommendation-service
+          uri: lb://recommendation-service
+          predicates:
+            - Path=/api/recommendations/**
+          filters:
+            - StripPrefix=1
+
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+  security:
+    user:
+      name: admin
+      password: gatewaypass
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      assetsFallback:
+        register-health-indicator: true
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
